@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group, Time Slot, and Location Selection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 400px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .error-message {
+            color: #f44336;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Group, Time Slot, and Location Selection</h1>
+        <form>
+            <label for="group">Select Group:</label>
+            <select id="group" onchange="updateNames()">
+                <option value="">--Select Group--</option>
+                <option value="Group 1">Group 1</option>
+                <option value="Group 2">Group 2</option>
+                <option value="Group 3">Group 3</option>
+                <option value="Group 4">Group 4</option>
+                <option value="Group 5">Group 5</option>
+                <option value="Group 6">Group 6</option>
+            </select>
+            
+            <label for="name">Select Name:</label>
+            <select id="name">
+                <option value="">--Select Name--</option>
+            </select>
+
+            <label for="timeSlot">Select Time Slot:</label>
+            <select id="timeSlot">
+                <option value="07:00 - 09:00">07:00 - 09:00</option>
+                <option value="09:00 - 11:00">09:00 - 11:00</option>
+                <option value="11:00 - 13:00">11:00 - 13:00</option>
+                <option value="13:00 - 15:00">13:00 - 15:00</option>
+            </select>
+
+            <label for="location">Select Location:</label>
+            <select id="location">
+                <option value="Barcelos">Barcelos</option>
+                <option value="Jubilee Park">Jubilee Park</option>
+                <option value="Sunnypark">Sunnypark</option>
+                <option value="ABSA">ABSA</option>
+            </select>
+            
+            <button type="button" onclick="addToSpreadsheet()">Add to Spreadsheet</button>
+            <div id="error" class="error-message"></div>
+        </form>
+    </div>
+
+    <script>
+        // Sample names for each group
+        const namesByGroup = {
+            "Group 1": ["Steven Banda", "Carol Banda", "Phillimon Motena", "Thandi Motena", "Steven Manamela", "Wendy Manamela", "Reokeditswe Manamela", "Relebogile Manamela", "Boiketlo Thobakgale", "Nathaniel Mashego", "Rachel Mahlangu", "Sanyane Madikoto", "Makhadzi Netshivhulana", "Peter Motlakeng"],
+            "Group 2": ["Siphiwe Mahlangu", "Phillemon Mpebe", "Vivian Mpebe", "Vincent Mabilo", "Amukelani Mabilo", "Joyce Mporeji", "Sarel Lamola", "Bonolo Lamola", "Tuelo Mosimanewapula", "Lesego Mosimanewapula", "Catherine Mogashoa", "Abbey Manamela", "Kabo Moatshe", "Evelyn Motšhephe"],
+            "Group 3": ["Reuben Ngobeni", "Matshediso Ngobeni", "Moses Motau", "Esther Motau", "Khomotso Motau", "Kgothatso Motau", "Mahlatse Mavuso", "Eunice Maserumula", "Precious Mkhabela", "Matebello Moshasha", "Gloria Machipi", "Karabo Tshoma", "Zanele Maduna"],
+            "Group 4": ["Tshepiso Mothoa", "Stella Mothoa", "Tiyani Ndobe", "Khuthadzo Ndobe", "Mamello Khuto", "Kentse Khuto", "Neo Roberts", "Mpho Lechoano", "Lerato Lechoano", "Sarah Kgobokoe", "Zama Dlamini", "Alice Rammatli"],
+            "Group 5": ["Mohale Makateng", "Mathilda Makateng", "John Pheme", "Mashudu Pheme", "Nomsa Lobelo", "Khanyo Lobelo", "Thato Lobelo", "Abram Hlongwane", "Lettah Hlongwane", "Bohlale Hlongwane", "Ananelang Hlongwane", "Bontle Hlongwane"],
+            "Group 6": ["Solomon Mwanza", "Sesie Mwanza", "Omphile Mwanza", "Onalerona Mwanza", "Odirile Mwanza", "Dennis Mashoeshoe", "Tiisetso Ntsoane", "Matthew Masooa", "Dipuo Tsotetsi", "Siphiwe Sithole", "Theophilus Ngoza"]
+        };
+
+        const bookedSlots = {
+            "07:00 - 09:00": [],
+            "09:00 - 11:00": [],
+            "11:00 - 13:00": [],
+            "13:00 - 15:00": []
+        };
+
+        function updateNames() {
+            const groupSelect = document.getElementById('group');
+            const nameSelect = document.getElementById('name');
+            const selectedGroup = groupSelect.value;
+
+            nameSelect.innerHTML = '<option value="">--Select Name--</option>';
+
+            if (selectedGroup && namesByGroup[selectedGroup]) {
+                namesByGroup[selectedGroup].forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    nameSelect.appendChild(option);
+                });
+            }
+        }
+
+        function addToSpreadsheet() {
+            const groupSelect = document.getElementById('group');
+            const nameSelect = document.getElementById('name');
+            const timeSlotSelect = document.getElementById('timeSlot');
+            const locationSelect = document.getElementById('location');
+            const errorElement = document.getElementById('error');
+
+            const name = nameSelect.value;
+            const timeSlot = timeSlotSelect.value;
+            const location = locationSelect.value;
+            
+            errorElement.textContent = ''; // Clear previous error message
+
+            if (groupSelect.value === '') {
+                errorElement.textContent = 'Please select a group.';
+                return;
+            }
+
+            if (name === '') {
+                errorElement.textContent = 'Please select a name.';
+                return;
+            }
+
+            if (bookedSlots[timeSlot].length >= 4) {
+                errorElement.textContent = 'This time slot is already full. Please choose another time slot.';
+                return;
+            }
+
+            if (bookedSlots[timeSlot].includes(name)) {
+                errorElement.textContent = 'This name is already booked for the selected time slot.';
+                return;
+            }
+
+            bookedSlots[timeSlot].push(name);
+
+            console.log("Group:", groupSelect.value);
+            console.log("Name:", name);
+            console.log("Time Slot:", timeSlot);
+            console.log("Location:", location);
+        }
+    </script>
+</body>
+</html>
