@@ -71,8 +71,7 @@ if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
             <a href="admin_manage_bookings.php" class="btn">Manage Trolly Bookings</a>
             <a href="add_location.php" class="btn">Add Locations</a>
             <a href="add_timeslot.php" class="btn">Add Time Slots</a>
-            
-            <h2>Manage Territories</h2>
+                        <h2>Manage Territories</h2>
             <a href="manage_territory.php" class="btn">Manage Territory</a>
             
             <h2>Manage Names and Roles</h2>
@@ -89,3 +88,4 @@ if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
     </footer>
 </body>
 </html>
+
