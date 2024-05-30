@@ -10,7 +10,7 @@ function log_error($message) {
     echo "<div class='alert alert-danger'>$message</div>";
 }
 
-$conn = new mysqli("localhost", "id22185372_arcadiacong", "Arcadia123%", "id22185372_arcadiacong");
+$conn = new mysqli("f2fbe0zvg9j8p9ng.cbetxkdyhwsb.us-east-1.rds.amazonaws.com", "d0d2pweoaui1aloc", "miqd2lotp3n7o7c6", "vij8oxb41a7lpjg6");
 if ($conn->connect_error) {
     log_error("Connection failed: " . $conn->connect_error);
     die("Connection failed: " . $conn->connect_error);
@@ -106,7 +106,7 @@ $conn->close();
         
         <h2>Add New Location</h2>
         <form method="post" action="add_location.php">
-            <div class="form-group">
+                       <div class="form-group">
                 <label for="location_name">Location Name:</label>
                 <input type="text" id="location_name" name="location_name" class="form-control" required>
             </div>
@@ -149,3 +149,4 @@ $conn->close();
     </footer>
 </body>
 </html>
+
