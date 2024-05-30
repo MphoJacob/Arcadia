@@ -1,16 +1,4 @@
-<?php
-session_start();
-if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
-    header("Location: admin_login.php");
-    exit();
-}
-
-function log_error($message) {
-    error_log($message);
-    echo "<div class='alert alert-danger'>$message</div>";
-}
-
-$conn = new mysqli("localhost", "id22185372_arcadiacong", "Arcadia123%", "id22185372_arcadiacong");
+aloc", "miqd2lotp3n7o7c6", "vij8oxb41a7lpjg6");
 if ($conn->connect_error) {
     log_error("Connection failed: " . $conn->connect_error);
     die("Connection failed: " . $conn->connect_error);
@@ -87,7 +75,7 @@ $conn->close();
         <h1>Modify Booking</h1>
     </header>
     <main class="container my-5">
-        <?php if (!empty($message        )): ?>
+        <?php if (!empty($message)): ?>
             <div class="alert alert-info"><?php echo $message; ?></div>
         <?php endif; ?>
 
@@ -128,5 +116,3 @@ $conn->close();
     </footer>
 </body>
 </html>
-
-
