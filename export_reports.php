@@ -1,33 +1,16 @@
-<?php
-session_start();
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
-    header("Location: admin_login.php");
-    exit();
-}
-
-$conn = new mysqli("localhost", "id22185372_arcadiacong", "Arcadia123%", "id22185372_arcadiacong");
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['export'])) {
-    $format = $_POST['format'];
-    $sql = "SELECT groups.name AS group_name, names.name AS name,
-                   CONCAT(timeslots.start_time, ' to ', timeslots.end_time) AS timeslot,
-                   locations.location_name AS location,
-                   bookings.booking_date AS date
+.name as name,
+                   CONCAT(timeslots.start_time, ' to ', timeslots.end_time) as timeslot,
+                   locations.location_name as location,
+                   bookings.booking_date as date
             FROM bookings
             JOIN groups ON bookings.group_id = groups.id
             JOIN names ON bookings.name_id = names.id
             JOIN timeslots ON bookings.timeslot_id = timeslots.id
             JOIN locations ON bookings.location_id = locations.id
-            ORDER BY locations.location_name, timeslots.start_time, timeslots.end_time";
-   
+            ORDER BY bookings.booking_date DESC";
+
     $result = $conn->query($sql);
-   
+
     if ($result->num_rows > 0) {
         if ($format == 'csv') {
             header('Content-Type: text/csv');
@@ -35,77 +18,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['export'])) {
             $output = fopen('php://output', 'w');
             fputcsv($output, array('Group', 'Name', 'Time Slot', 'Location', 'Date'));
             while ($row = $result->fetch_assoc()) {
-                fputcsv($output, array($row['group_name'], $row['name'], $row['timeslot'], $row['location'], $row['date']));
+                fputcsv($output, $row);
             }
             fclose($output);
             exit();
         } elseif ($format == 'pdf') {
-            require_once('tcpdf/tcpdf.php');
-            $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
-
-            $pdf->SetCreator(PDF_CREATOR);
-            $pdf->SetAuthor('Booking System');
-            $pdf->SetTitle('Booked Data');
-            $pdf->SetSubject('Booked Data Report');
-            $pdf->SetKeywords('TCPDF, PDF, report, booking');
-
-            $pdf->SetHeaderData(PDF_HEADER_LOGO, PDF_HEADER_LOGO_WIDTH, PDF_HEADER_TITLE, PDF_HEADER_STRING);
-            $pdf->setHeaderFont(Array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
-            $pdf->setFooterFont(Array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
-            $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
-            $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
-            $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
-            $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
-            $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
-            $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
-            $pdf->SetFont('dejavusans', '', 10);
+            require('tcpdf/tcpdf.php');
+            $pdf = new TCPDF();
             $pdf->AddPage();
-
-            $current_location = '';
-            $current_timeslot = '';
-
-            $html = '<h1>Booked Data Report</h1>';
-
+            $pdf->SetFont('Arial', 'B', 12);
+            $pdf->Cell(0, 10, 'Bookings', 0, 1, 'C');
+            $pdf->SetFont('Arial', 'B', 10);
+            $pdf->Cell(40, 10, 'Group', 1);
+            $pdf->Cell(40, 10, 'Name', 1);
+            $pdf->Cell(50, 10, 'Time Slot', 1);
+            $pdf->Cell(40, 10, 'Location', 1);
+            $pdf->Cell(20, 10, 'Date', 1);
+            $pdf->Ln();
+            $pdf->SetFont('Arial', '', 10);
             while ($row = $result->fetch_assoc()) {
-                if ($current_location != $row['location']) {
-                    if ($current_location != '') {
-                        $html .= '</tbody></table>';
-                    }
-                    $current_location = $row['location'];
-                    $html .= '<h2>' . $current_location . '</h2>';
-                    $current_timeslot = ''; // Reset timeslot when location changes
-                }
-                
-                if ($current_timeslot != $row['timeslot']) {
-                    if ($current_timeslot != '') {
-                        $html .= '</tbody></table>';
-                    }
-                    $current_timeslot = $row['timeslot'];
-                    $html .= '<h3>' . $current_timeslot . '</h3>';
-                    $html .= '<table border="1" cellpadding="5">
-                                <thead>
-                                    <tr>
-                                        <th>Group</th>
-                                        <th>Name</th>
-                                        <th>Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody>';
-                }
-
-                $html .= '<tr>
-                            <td>' . $row['group_name'] . '</td>
-                            <td>' . $row['name'] . '</td>
-                            <td>' . $row['date'] . '</td>
-                          </tr>';
+                $pdf->Cell(40, 10, $row['group_name'], 1);
+                $pdf->Cell(40, 10, $row['name'], 1);
+                $pdf->Cell(50, 10, $row['timeslot'], 1);
+                $pdf->Cell(40, 10, $row['location'], 1);
+                $pdf->Cell(20, 10, $row['date'], 1);
+                $pdf->Ln();
             }
-
-            if ($current_location != '') {
-                $html .= '</tbody></table>';
-            }
-
-            $pdf->writeHTML($html, true, false, true, false, '');
-            $pdf->Output('bookings.pdf', 'I');
+            $pdf->Output('D', 'bookings.pdf');
             exit();
         }
     } else {
@@ -120,51 +59,8 @@ $conn->close();
 <html>
 <head>
     <title>Export Reports</title>
-    <link rel="stylesheet" type="text/css" href="styles.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        header {
-            background: #333;
-            color: #fff;
-            padding: 10px 0;
-            text-align: center;
-        }
-        main {
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-            background: #fff;
-            border: 1px solid #ddd;
-        }
-        .button-container {
-            margin-top: 20px;
-            text-align: center;
-        }
-        button {
-            background: #333;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #555;
-        }
-        footer {
-            background: #333;
-            color: #fff;
-            text-align: center;
-            padding: 10px 0;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-        }
-    </style>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
 </head>
 <body>
     <header>
