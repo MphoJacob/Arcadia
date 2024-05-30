@@ -1,4 +1,16 @@
-aloc", "miqd2lotp3n7o7c6", "vij8oxb41a7lpjg6");
+<?php
+session_start();
+if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
+    header("Location: admin_login.php");
+    exit();
+}
+
+function log_error($message) {
+    error_log($message);
+    echo "<div class='alert alert-danger'>$message</div>";
+}
+
+$conn = new mysqli("f2fbe0zvg9j8p9ng.cbetxkdyhwsb.us-east-1.rds.amazonaws.com", "d0d2pweoaui1alaloc", "miqd2lotp3n7o7c6", "vij8oxb41a7lpjg6");
 if ($conn->connect_error) {
     log_error("Connection failed: " . $conn->connect_error);
     die("Connection failed: " . $conn->connect_error);
